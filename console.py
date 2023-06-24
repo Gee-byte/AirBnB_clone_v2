@@ -116,42 +116,27 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
-        if not args:
+        obj = {}
+        args = args.split(' ')
+        params = args[1:]
+        if not args[0]:
             print("** class name missing **")
             return
-
-        arg = args.split()
-        class_name = arg[0]
-        params = {}
-
-        if class_name not in HBNBCommand.classes:
+        elif args[0] not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-
-        for param in arg[1:]:
-            if '=' not in param:
-                continue
-
-            key, value = param.split('=', 1)
-            key = key.strip()
-            value = value.strip()
-
-            if value.startswith('"') and value.endswith('"'):
-                value = value[1:-1].replace('_', ' ')
-
-            try:
-                value = int(value)
-            except ValueError:
-                try:
-                    value = float(value)
-                except ValueError:
-                    continue
-
-            params[key] = value
-
-        new_instance = HBNBCommand.classes[class_name](**params)
+        new_instance = HBNBCommand.classes[args[0]](**obj)
+        for param in params:
+            keyname, value = param.split('=')
+            if value.startswith('"'):
+                setattr(new_instance, keyname, str(value[1: -1]))
+            elif "." in value:
+                setattr(new_instance, keyname, float(value))
+            else:
+                setattr(new_instance, keyname, int(value))
         storage.save()
         print(new_instance.id)
+        storage.save()
 
     def help_create(self):
         """ Help information for the create method """
