@@ -127,13 +127,17 @@ class HBNBCommand(cmd.Cmd):
             return
         new_instance = HBNBCommand.classes[args[0]](**obj)
         for param in params:
-            keyname, value = param.split('=')
-            if value.startswith('"'):
-                setattr(new_instance, keyname, str(value[1: -1]))
-            elif "." in value:
-                setattr(new_instance, keyname, float(value))
-            else:
-                setattr(new_instance, keyname, int(value))
+            try:
+                keyname, value = param.split('=')
+                if value.startswith('"'):
+                    value = value[1:-1].replace('_', ' ')
+                    setattr(new_instance, keyname, value)
+                elif "." in value:
+                    setattr(new_instance, keyname, float(value))
+                else:
+                    setattr(new_instance, keyname, int(value))
+            except (ValueError, AttributeError):
+                pass
         storage.save()
         print(new_instance.id)
         storage.save()
