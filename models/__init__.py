@@ -5,7 +5,7 @@
    instantiates a database storage engine (DBStorage).
 -> Otherwise, instantiates a file storage engine (FileStorage).
 """
-import os import getenv
+from os import getenv
 
 # Check the value of the environment variable HBNB_TYPE_STORAGE
 if os.getenv('HBNB_TYPE_STORAGE') == 'db':
