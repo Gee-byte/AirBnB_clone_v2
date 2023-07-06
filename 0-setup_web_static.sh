@@ -1,26 +1,44 @@
-#!/usr/bin/esnv bash
-# a Bash script that sets up your web servers for the deployment
+#!/usr/bin/env bash
+# Prepare my webservers (web-01 & web-02)
 
-sudo apt-get update
-sudo apt-get -y --only-upgrades install nginx
-mkdir -p /data/web_static/shared/
-mkdir -p /data/web_static/releases/test/
-echo "It is working" >> /data/web_static/releases/test/index.html
-ln -sf /data/web_static/releases/test/ /data/web_static/current
-chown -R ubuntu:ubuntu /data/
+# uncomment for easy debugging
+#set -x
 
-printf %s "server {
-    listen 80;
-    listen [::]:80 default_server;
-    root   /etc/nginx/html;
-    index  index.html index.htm;
-    add_header X-Served-By \$hostname;
-    location /redirect_me {
-        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
-    }
-    location /hbnb_static {
-        alias /data/web_static/current/;
-    }
-}" > /etc/nginx/sites-available/default
+# colors
+blue='\e[1;34m'
+#brown='\e[0;33m'
+green='\e[1;32m'
+reset='\033[0m'
 
-service nginx restart
+echo -e "${blue}Updating and doing some minor checks...${reset}\n"
+
+# install nginx if not present
+if [ ! -x /usr/sbin/nginx ]; then
+	sudo apt-get update -y -qq && \
+	     sudo apt-get install -y nginx
+fi
+
+echo -e "\n${blue}Setting up some minor stuff.${reset}\n"
+
+# Create directories...
+sudo mkdir -p /data/web_static/releases/test /data/web_static/shared/
+
+# create index.html for test directory
+echo "<h1>Welcome to th3gr00t.tech <\h1>" | sudo dd status=none of=/data/web_static/releases/test/index.html
+
+# create symbolic link
+sudo ln -sf /data/web_static/releases/test /data/web_static/current
+
+# give user ownership to directory
+sudo chown -R ubuntu:ubuntu /data/
+
+# backup default server config file
+sudo cp /etc/nginx/sites-enabled/default nginx-sites-enabled_default.backup
+
+# Set-up the content of /data/web_static/current/ to redirect
+# to domain.tech/hbnb_static
+sudo sed -i '37i\\tlocation /hbnb_static/ {\n\t\talias /data/web_static/current/;\n\t}\n' /etc/nginx/sites-available/default
+
+sudo service nginx restart
+
+echo -e "${green}Completed${reset}"
